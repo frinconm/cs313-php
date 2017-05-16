@@ -1,5 +1,4 @@
 <?php
-    echo "TUVIEJ";
   phpinfo();
 
 ?>
