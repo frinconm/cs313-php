@@ -1,0 +1,25 @@
+{
+  "name": "bower.json",
+  "description": "Bower stuff",
+  "main": "bower.json",
+  "authors": [
+    "Frank"
+  ],
+  "license": "no-license",
+  "keywords": [
+    "bower"
+  ],
+  "homepage": "https://safe-hamlet-75055.herokuapp.com/",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-number-picker": "^2.2.0",
+    "parsleyjs": "^2.7.2"
+  }
+}

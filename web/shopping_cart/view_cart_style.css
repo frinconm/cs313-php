@@ -1,0 +1,48 @@
+h5{
+    font-weight: 600;
+}
+
+.top-buffer{
+    margin-top: 20px;
+}
+
+.top-short-buffer{
+    margin-top: 20px;
+}
+
+.bottom-buffer{
+    margin-bottom: 40px;
+}
+
+.list-left{
+    float:left;
+}
+
+.something-right{
+    float: right;
+    margin-right: 17px;
+}
+
+#two_buttons{
+    display: inline-block;
+}
+
+#two_buttons_wrapper{
+    width: 267px;
+    margin: 30px auto;
+}
+
+.order-summary{
+    background-color: #e0edfe;
+    border-radius: 15px;
+}
+
+#shipping-wrapper{
+    background-color: #e0edfe;
+    border-radius: 15px;
+    padding-top: 2px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 0 auto;
+}

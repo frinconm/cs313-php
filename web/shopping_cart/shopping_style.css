@@ -1,0 +1,31 @@
+h4.price{
+    color: #c10000;
+}
+
+h5{
+    font-weight: 900;
+}
+
+.top-buffer{
+    margin-top: 40px;
+}
+
+.top-short-buffer{
+    margin-top: 20px;
+}
+
+.items-number{
+    width: 22px;
+}
+
+.ui-spinner{
+    margin-left: 10px;
+}
+
+.items-selected{
+    float: right;
+}
+
+.bottom-buffer{
+    margin-bottom: 40px;
+}
