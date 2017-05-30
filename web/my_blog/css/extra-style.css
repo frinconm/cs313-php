@@ -20,3 +20,7 @@
 .wrap-content{
     display: inline-block;
 }
+
+.top-buffer-10{
+    margin-top: 10px;
+}

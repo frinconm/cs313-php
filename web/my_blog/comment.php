@@ -1,12 +1,11 @@
 <?php
-session_start();
 
 function addOrUpdateUrlParam($name, $value)
 {
     $params = $_GET;
     unset($params[$name]);
     $params[$name] = $value;
-    return basename($_SERVER['PHP_SELF']).'?'.http_build_query($params);
+    return 'index.php?'.http_build_query($params);
 }
 //https://stackoverflow.com/questions/3162725/how-can-i-add-get-variables-to-end-of-the-current-url-in-php
 
@@ -44,9 +43,9 @@ catch (PDOException $ex) {
     <title>Secrets</title>
     <!--JQuery -->
     <script
-            src="https://code.jquery.com/jquery-3.2.1.min.js"
-            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-            crossorigin="anonymous"></script>
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
     <!--Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="css/bootstrap-theme.min.css">
@@ -61,12 +60,8 @@ catch (PDOException $ex) {
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <div class="navbar-header">
-                        <a class="navbar-brand" href="index.php">Secrets</a>
+                        <a class="navbar-brand" href="index.php"">Secrets</a>
                     </div>
-                    <ul class="nav navbar-nav">
-                        <li class="active"><a href="<?php echo addOrUpdateUrlParam("latest", 1);?>">Latest</a></li>
-                        <li ><a href="<?php echo addOrUpdateUrlParam("latest", 0);?>">Top Rated</a></li>
-                    </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
                         <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
@@ -90,59 +85,23 @@ catch (PDOException $ex) {
         <div class="col-xs-2"></div>
         <div class="col-xs-5">
             <?php
-            $general_query = '';
             //All colleges
-            if ($_GET["college_id"] != 0)
-            {
-                if ($_GET["latest"] == 1)
-                {
-                    $general_query = $db->prepare('SELECT (p.likes::float / (CASE (p.likes + p.dislikes) WHEN 0 THEN 1 ELSE (p.likes + p.dislikes) END)::float) AS rating,
+            $post_query = $db->prepare('SELECT (p.likes::float / (CASE (p.likes + p.dislikes) WHEN 0 THEN 1 ELSE (p.likes + p.dislikes) END)::float) AS rating,
                                   post_id, content, p.college_id, likes, dislikes, sent_date, college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
-                                  WHERE p.college_id = :college_id
-                                  ORDER BY rating DESC');
-                }
-                else if ($_GET["latest"] == 0)
-                {
-                    $general_query = $db->prepare('SELECT post_id, content, p.college_id, likes, dislikes, sent_date, college.name
-                                  FROM post p JOIN
-                                  college ON p.college_id = college.college_id
-                                  WHERE p.college_id = :college_id');
-                }
+                                  WHERE p.post_id = :post_id');
 
-                $general_query->execute(array(':college_id' => $_GET["college_id"]));
-            }
-            else if ($_GET["college_id"] == 0)
-            {
-                if ($_GET["latest"] == 0)
-                {
-                    $general_query = $db->prepare('SELECT (p.likes::float / (CASE (p.likes + p.dislikes) WHEN 0 THEN 1 ELSE (p.likes + p.dislikes) END)::float) AS rating,
-                                  post_id, content, p.college_id, likes, dislikes, sent_date, college.name
-                                  FROM post p JOIN
-                                  college ON p.college_id = college.college_id
-                                  ORDER BY rating DESC');
-                }
-                else if ($_GET["latest"] == 1)
-                {
-                    $general_query = $db->prepare('SELECT post_id, content, p.college_id, likes, dislikes, sent_date, college.name
-                                  FROM post p JOIN
-                                  college ON p.college_id = college.college_id');
-                    $general_query->execute();
-                }
+            $post_query->execute(array(':post_id' => $_GET["post_id"]));
+            $row = $post_query->fetch(PDO::FETCH_ASSOC);
 
-                $general_query->execute();
-            }
-
-            while ($row = $general_query->fetch(PDO::FETCH_ASSOC))
-            {
                 $num_comments_query = $db->prepare('SELECT coalesce(count(comment_id), 0) as num_comments FROM comment WHERE post_id = :post_id');
                 $num_comments_query->execute(array((':post_id') => $row['post_id']));
                 $num_comments_result = $num_comments_query->fetchColumn();
                 $rating = round(($row['likes'] / ($row['likes'] + $row['dislikes'])) * 100);
                 echo '<div class="panel panel-default">
                       <div class="panel-body"><span class="pull-right">' . $row['name']. '</span><br>' . $row['content'] .
-                     '<div class="progress top-buffer-10 fixed-width-65">';
+                    '<div class="progress top-buffer-10 fixed-width-65">';
                 if ($rating >= 50)
                 {
                     echo '<div class="progress-bar progress-bar-success" ';
@@ -160,10 +119,25 @@ catch (PDOException $ex) {
                               <button type="button" class="btn btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></button>
                               <button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></button>
                             </div>
-                          <a class="pull-right" href="comment.php?post_id=' . $row['post_id'] . '">' . $num_comments_result . ' Comments 
-                          <span class="glyphicon glyphicon-comment"></span></a>
+                          <p class="pull-right">' . $num_comments_result . ' Comments 
+                          <span class="glyphicon glyphicon-comment"></span></p>
                       </div>
                       </div>';
+
+                echo '<span class="btn btn-success">Comments</span>';
+
+            foreach ($db->query('SELECT "user".first_name, "user".last_name, "user".college_id, c.content, c.likes, c.dislikes, c.sent_date
+                                                      FROM "user"  JOIN comment c
+                                                      ON "user".user_id = c.user_id
+                                                      JOIN college co
+                                                      ON co.college_id = "user".college_id') as $row2)
+            {
+                echo '<div class="panel panel-default top-buffer-10">
+                    <div class="panel-body">
+                    <span class="pull-right">' . $row2['first_name']. ' ' . $row2['last_name'] . '</span><br>' .
+                    $row2['content'] . '
+                    </div>
+                </div>';
             }
             ?>
         </div>
@@ -186,17 +160,17 @@ catch (PDOException $ex) {
     <div class="row">
         <div class="col-xs-2"></div>
         <div class="col-xs-5 align="center">
-                <ul class="pagination">
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">4</a></li>
-                    <li><a href="#">5</a></li>
-                </ul>
-        </div>
-        <div class="col-xs-3"></div>
-        <div class="col-xs-2"></div>
+        <ul class="pagination">
+            <li><a href="#">1</a></li>
+            <li><a href="#">2</a></li>
+            <li><a href="#">3</a></li>
+            <li><a href="#">4</a></li>
+            <li><a href="#">5</a></li>
+        </ul>
     </div>
+    <div class="col-xs-3"></div>
+    <div class="col-xs-2"></div>
+</div>
 </div>
 </body>
 </html>
