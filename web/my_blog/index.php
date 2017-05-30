@@ -1,24 +1,37 @@
 <?php
 session_start();
-try
-{
-    $user = 'postgres';
-    $password = '5720297';
-    $db = new PDO('pgsql:host=127.0.0.1;dbname=postgres', $user, $password);
+
+// default Heroku Postgres configuration URL
+$dbUrl = getenv('DATABASE_URL');
+
+if (empty($dbUrl)) {
+    // example localhost configuration URL with postgres username and a database called cs313db
+    $dbUrl = "postgres://postgres:5720297@localhost:5432/postgres";
 }
-catch (PDOException $ex)
-{
-    echo 'Error!: ' . $ex->getMessage();
+
+$dbopts = parse_url($dbUrl);
+
+
+$dbHost = $dbopts["host"];
+$dbPort = $dbopts["port"];
+$dbUser = $dbopts["user"];
+$dbPassword = $dbopts["pass"];
+$dbName = ltrim($dbopts["path"],'/');
+
+
+try {
+    $db = new PDO("pgsql:host=$dbHost;port=$dbPort;dbname=$dbName", $dbUser, $dbPassword);
+}
+catch (PDOException $ex) {
+    print "<p>error: $ex->getMessage() </p>\n\n";
     die();
 }
+
 ?>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-    <meta http-equiv="Pragma" content="no-cache"/>
-    <meta http-equiv="Expires" content="0"/>
     <title>Secrets</title>
     <!--JQuery -->
     <script
