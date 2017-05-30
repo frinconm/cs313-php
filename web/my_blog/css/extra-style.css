@@ -1,0 +1,22 @@
+.bottom-buffer-20 {
+    margin-bottom: 20px;
+}
+
+.fixed-width-65 {
+    width: 65%;
+    margin: 20px auto 15px;
+}
+
+#rating-block{
+    width: 100px;
+    height: 40px;
+}
+
+.center-something{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.wrap-content{
+    display: inline-block;
+}
