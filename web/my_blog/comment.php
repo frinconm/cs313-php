@@ -49,11 +49,16 @@ include "header.php"; ?>
 
                 echo '<div class="well well-sm success-color bottom-buffer-20">Comments</div>';
 
-            foreach ($db->query('SELECT "user".first_name, "user".last_name, "user".college_id, c.content, c.likes, c.dislikes, c.sent_date
+            $comments_query = $db->prepare('SELECT "user".first_name, "user".last_name, "user".college_id, c.content, c.likes, c.dislikes, c.sent_date
                                                       FROM "user"  JOIN comment c
                                                       ON "user".user_id = c.user_id
                                                       JOIN college co
-                                                      ON co.college_id = "user".college_id') as $row2)
+                                                      ON co.college_id = "user".college_id
+                                                      WHERE post_id = :post_id');
+
+            $comments_query->execute(array(':post_id' => $_GET["post_id"]));
+
+            while ($row2 = $comments_query->fetch(PDO::FETCH_ASSOC))
             {
                 echo '<div class="panel panel-default top-buffer-10">
                     <div class="panel-body">
@@ -70,13 +75,14 @@ include "header.php"; ?>
     <div class="row">
         <div class="col-xs-2"></div>
         <div class="col-xs-5">
-            <?php if (isset($_SESSION["usernmae"])) : ?>
-            <form>
+            <?php if (isset($_SESSION["username"])) : ?>
+            <form method="post" action="comment_loading.php">
                 <div class="form-group">
                 <label for="comment">Comment:</label>
-                <textarea class="form-control" rows="5" id="comment"></textarea>
+                <textarea class="form-control" rows="5" id="comment" name="comment"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Comment</button>
+                <input type="hidden" name="post_id" value="<?php echo $_GET["post_id"] ?>">
             </form>
             <?php else : ?>
                 <div class="panel panel-default">

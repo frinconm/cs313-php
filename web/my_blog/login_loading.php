@@ -20,10 +20,9 @@ if ($login_query->rowCount() > 0)
     $_SESSION["username"] = $row["HUE"];
     $_SESSION["profile_pic_url"] = $row["profile_pic_url"];
 
-    echo "USERNAM: " . $_SESSION["username"];
-    //header('Location: index.php');
+    header('Location: index.php');
 }
 else
 {
-    echo "tuvieja";
+    echo "Wrong username or password";
 }
