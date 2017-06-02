@@ -24,3 +24,25 @@
 .top-buffer-10{
     margin-top: 10px;
 }
+
+.success-color{
+    color: #ffffff;
+    background-color: #18bc9c;
+}
+
+.full-width{
+    width: 100%;
+}
+
+.popover{
+    width: 300%; /* Max Width of the popover (depending on the container!) */
+}
+
+.media-body{
+    color: white;
+}
+
+#loggedin{
+    padding: 10px;
+    width: 120px;
+}
