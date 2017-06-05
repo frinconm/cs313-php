@@ -2,7 +2,9 @@
 
 include "function.php";
 include "connect.php";
-include "header.php"; ?>
+include "header.php";
+
+$_SESSION["current"] = 'signup.php';?>
 
 <div class="row">
     <div class="col-xs-2"></div>

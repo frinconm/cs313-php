@@ -3,6 +3,8 @@
 include "function.php";
 include "connect.php";
 include "header.php";
+
+$_SESSION["current"] = 'new_post.php';
 ?>
     <div class="row">
         <div class="col-xs-2"></div>

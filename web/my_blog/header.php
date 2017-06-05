@@ -44,14 +44,15 @@ echo '<!DOCTYPE html>
 if (isset($_SESSION["username"]))
 {
     echo '
-<div class="media" id="loggedin">
-  <div class="media-left media-middle">
-    <img src="' . $_SESSION["profile_pic_url"] .'" class="media-object" style="width:50px; height: 40px; border-radius: 6%;">
-  </div>
-  <div class="media-body">
-    <h4 class="media-heading">'. $_SESSION["username"] .'</h4>
-  </div>
-</div>';
+    <div id="loggedin" class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+    <img src="' . $_SESSION["profile_pic_url"] .'" style="width:50px; height: 40px; border-radius: 6%;">&nbsp&nbsp&nbspWelcome, '. $_SESSION["username"] .'&nbsp&nbsp&nbsp
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+    <li><a href="#">Profile</a></li>
+    <li><a href="logout_loading.php">Logout</a></li>
+    </ul>
+    </div>';
 }
 else
 {
@@ -77,8 +78,25 @@ else
     </div>
     <div class="row bottom-buffer-20">
         <div class="col-xs-2"></div>
-        <div class="col-xs-5"></div>
-        <div class="col-xs-3">
+        <div class="col-xs-7">';
+
+    if ($_SESSION["wrong"] == true)
+    {
+        echo '<div class="alert alert-danger">
+    Wrong username or password.
+        </div>';
+
+        $_SESSION["wrong"] = false;
+
+        echo '<script type="text/javascript">',
+        'popOverOnClick();',
+        '</script>'
+        ;
+    }
+
+    echo '
+        </div>
+        <div class="col-xs-1">
             <div class="pull-right">
                 <a href="new_post.php" class="btn btn-warning">New Secret</a>
             </div>

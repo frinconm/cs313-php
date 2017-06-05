@@ -9,7 +9,7 @@
 
 #rating-block{
     width: 100px;
-    height: 40px;
+    height: 50px;
 }
 
 .center-something{
@@ -38,11 +38,14 @@
     width: 300%; /* Max Width of the popover (depending on the container!) */
 }
 
-.media-body{
+#loggedin{
     color: white;
 }
 
-#loggedin{
-    padding: 10px;
-    width: 120px;
+.dropdown-toggle{
+    padding: 8px;
+}
+
+#be_registered{
+    width: 214px;
 }
