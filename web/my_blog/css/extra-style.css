@@ -49,3 +49,28 @@
 #be_registered{
     width: 214px;
 }
+
+.center-list{
+    display: inline-block;
+    width: auto;
+}
+
+.footer{
+    position: relative;
+    margin-top: -58px; /* negative value of footer height */
+    height: 58px;
+    clear: both;
+}
+
+.footer-p{
+    position: relative;
+    top: 18px;
+}
+
+html, body{
+    height: 100%;
+}
+
+.container-fluid{
+    min-height: 100%;
+}

@@ -10,7 +10,7 @@ $insert_query = $db->prepare('INSERT INTO post(content, college_id, sent_date)
                                         VALUES
                                         (:secret_content
                                         , :college_id
-                                        , CURRENT_DATE)');
+                                        , now())');
 
 $insert_query->execute(array(':secret_content' => $secret_content, ':college_id' => $university));
 

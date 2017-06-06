@@ -4,7 +4,12 @@ include "function.php";
 include "connect.php";
 include "header.php";
 
-$_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
+if ($_GET["page"] == 0)
+{
+    $_GET["page"] = 1;
+}
+
+$_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id'] . '&page=' . $_GET["page"]; ?>
 
     <div class="row">
         <div class="col-xs-2"></div>
@@ -17,7 +22,7 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
                                     THEN 1 
                                     ELSE (SUM(CASE WHEN lp.is_like = true THEN 1 ELSE 0 END) + SUM(CASE WHEN lp.is_like = false THEN 1 ELSE 0 END)) 
                                     END)::float) AS rating,
-                                  p.post_id, p.content, p.college_id, p.sent_date, college.name
+                                  p.post_id, p.content, p.college_id, to_char(p.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f, p.sent_date, college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
                                   LEFT OUTER JOIN like_post lp
@@ -47,7 +52,7 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
                 $num_comments_result = $num_comments_query->fetchColumn();
                 $rating = round($row["rating"] * 100);
                 echo '<div class="panel panel-default">
-                      <div class="panel-body"><span class="pull-right">' . $row['name']. '</span><br>' . $row['content'] .
+                      <div class="panel-body"><span class="pull-left">Published on ' . $row['sent_date_f'] . '</span><span class="pull-right">' . $row['name']. '</span><br><br>' . $row['content'] .
                     '<div class="progress top-buffer-10 fixed-width-65">';
                 if ($rating >= 50)
                 {
@@ -90,27 +95,71 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
                 echo '<div class="well well-sm success-color bottom-buffer-20">Comments</div>';
 
             $comments_query = $db->prepare('SELECT "user".first_name, "user".last_name, "user".college_id, c.content, c.sent_date, "user".profile_pic_url,
-                                                      co.name
+                                                      co.name, c.comment_id,
+                                                      to_char(c.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f
                                                       FROM "user"  JOIN comment c
                                                       ON "user".user_id = c.user_id
                                                       JOIN college co
                                                       ON co.college_id = "user".college_id
-                                                      WHERE post_id = :post_id');
+                                                      WHERE post_id = :post_id
+                                                      LIMIT 5 OFFSET (5 * (:offset - 1))');
 
-            $comments_query->execute(array(':post_id' => $_GET["post_id"]));
+            $comments_query->execute(array(':post_id' => $_GET["post_id"], ':offset' => $_GET['page']));
+
+
 
             while ($row2 = $comments_query->fetch(PDO::FETCH_ASSOC))
             {
+                $rating_comment_query = $db->prepare('SELECT 
+                                                                SUM
+                                                                (CASE 
+                                                                    WHEN is_like = true THEN 1
+                                                                    ELSE -1
+                                                                END) as "ratingc",
+                                                                comment_id
+                                                                FROM like_comment
+                                                                WHERE comment_id = :comment_id
+                                                                GROUP BY comment_id');
+
+                $rating_comment_query->execute(array(':comment_id' => $row2['comment_id']));
+                $ratingc = $rating_comment_query->fetch(PDO::FETCH_ASSOC);
+
+                $results_av_query = '';
+                $already_voted_query = '';
+
+                if (isset($_SESSION["username"]))
+                {
+                    $already_voted_query = $db->prepare('SELECT EXISTS(SELECT  1 FROM like_comment 
+                                                                  WHERE comment_id = :comment_id
+                                                                  AND user_id = :user_id) AS "exists"');
+
+                    $already_voted_query->execute(array(':comment_id' => $row2['comment_id'], ':user_id' => $_SESSION['user_id']));
+
+                    $results_av_query = $already_voted_query->fetch(PDO::FETCH_ASSOC);
+                }
+
                 echo '<div class="panel panel-default top-buffer-10">
                     <div class="panel-body">
                     <span class="pull-left">';
 
                 if (isset($_SESSION["username"]))
             {
-                echo '<div class="btn-group btn-group-xs">
-                      <a href="#" class="btn btn-xs btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></a>
-                      <a href="#" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></a>
+                if ($results_av_query["exists"] == false)
+                {
+                    echo '<div class="btn-group btn-group-xs">
+                      <a href="liking_comment.php?like=1&comment_id=' . $row2['comment_id'] .'" class="btn btn-xs btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></a>
+                      <a href="liking_comment.php?like=0&comment_id=' . $row2['comment_id'] .'" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></a>
                     </div>';
+
+                }
+                else
+                {
+                    echo '<div class="btn-group btn-group-xs">
+                      <a href="#" data-toggle="tooltip" title="You already voted" class="btn btn-xs btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></a>
+                      <a href="#" data-toggle="tooltip" title="You already voted" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></a>
+                    </div>';
+                }
+
             }
             else
             {
@@ -121,6 +170,25 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
             }
 
             echo '</span>
+                    <span class="pull-left"';
+
+                if ($ratingc["ratingc"] >= 0)
+                {
+                    if ($ratingc["ratingc"] > 0)
+                    {
+                        echo 'style="color: green;">&nbsp;&nbsp;+' . $ratingc["ratingc"];
+                    }
+                    else
+                    {
+                        echo 'style="color: gray;">&nbsp;&nbsp;' . $ratingc["ratingc"];
+                    }
+                }
+                else
+                {
+                    echo 'style="color: red;">&nbsp;&nbsp;' . $ratingc["ratingc"];
+                }
+
+            echo '</span>
                     <span class="pull-right">' . $row2['name'] . '</span><br>
                     <div class="media">
                       <div class="media-left">
@@ -129,8 +197,9 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
                       <div class="media-body">
                         <h4 class="media-heading">' . $row2['first_name']. ' ' . $row2['last_name'] . '</h4>
                         <p>' . $row2['content'] . '</p>
-                      </div>
-                    </div>                    
+                      </div>                    
+                    </div>       
+                                <span class="pull-right">' . $row2['sent_date_f'] . '</span>
                     </div>
                 </div>';
             }
@@ -156,14 +225,25 @@ $_SESSION["current"] = 'comment.php?post_id=' . $_GET['post_id']; ?>
         <div class="col-xs-2"></div>
     </div>
     <div class="row">
-        <div class="col-xs-3"></div>
-        <div class="col-xs-4">
-            <ul class="pagination">
-                <li><a href="#">1</a></li>
-                <li><a href="#">2</a></li>
-                <li><a href="#">3</a></li>
-                <li><a href="#">4</a></li>
-                <li><a href="#">5</a></li>
+        <div class="col-xs-2"></div>
+        <div class="col-xs-5 text-center">
+            <ul class="pagination center-list">
+                <?php
+                $pages_query = $db->prepare('SELECT comment_id FROM comment WHERE post_id = :post_id');
+                $pages_query->execute(array(':post_id' => $_GET["post_id"]));
+
+                //5 posts per page
+                $count_pages = $pages_query->rowCount() / 5;
+
+                if (($pages_query->rowCount() % 5) != 0)
+                {
+                    $count_pages++;
+                }
+
+                for ($x = 1; $x <= $count_pages; $x++) {
+                    echo "<li><a href=\"comment.php?page=" . $x . "&post_id=" . $_GET["post_id"] ."\">" .  $x ."</a></li>";
+                }
+                ?>
             </ul>
         </div>
         <div class="col-xs-3"></div>

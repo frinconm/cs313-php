@@ -20,6 +20,8 @@ echo '<!DOCTYPE html>
         <!--My script -->
         <script src="js/script.js"></script>
         
+        <!--Form validation -->
+        <script src="../bower_components/parsleyjs/dist/parsley.min.js"></script>
         <!--My style -->
         <link rel="stylesheet" href="css/extra-style.css">
     </head>
@@ -34,8 +36,12 @@ echo '<!DOCTYPE html>
                         <a class="navbar-brand" href="index.php">Secrets</a>
                     </div>
                     <ul class="nav navbar-nav">
-                        <li class="active"><a href="' . addOrUpdateUrlParam("nonlatest", 0) . '">Latest</a></li>
-                        <li ><a href="' . addOrUpdateUrlParam("nonlatest", 1) . '">Top Rated</a></li>
+                        <li ';
+                    if ($_GET["nonlatest"] == 0) { echo 'class="active"'; }
+                    echo '><a href="' . addOrUpdateUrlParam("nonlatest", 0) . '">Latest</a></li>
+                        <li ';
+                    if ($_GET["nonlatest"] == 1) { echo 'class="active"'; }
+                    echo '><a href="' . addOrUpdateUrlParam("nonlatest", 1) . '">Top Rated</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="signup.php"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
@@ -46,10 +52,9 @@ if (isset($_SESSION["username"]))
     echo '
     <div id="loggedin" class="dropdown">
         <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-    <img src="' . $_SESSION["profile_pic_url"] .'" style="width:50px; height: 40px; border-radius: 6%;">&nbsp&nbsp&nbspWelcome, '. $_SESSION["username"] .'&nbsp&nbsp&nbsp
+    <img src="' . $_SESSION["profile_pic_url"] .'" style="width:50px; height: 40px; border-radius: 6%;">&nbsp&nbsp&nbspWelcome, '. $_SESSION["first_name"] .'&nbsp&nbsp&nbsp
     <span class="caret"></span></button>
     <ul class="dropdown-menu">
-    <li><a href="#">Profile</a></li>
     <li><a href="logout_loading.php">Logout</a></li>
     </ul>
     </div>';
@@ -93,6 +98,15 @@ else
         '</script>'
         ;
     }
+
+if ($_SESSION["already_taken"] == true)
+{
+    echo '<div class="alert alert-danger">
+    Username is already taken.
+        </div>';
+
+    $_SESSION["already_taken"] = false;
+}
 
     echo '
         </div>

@@ -4,7 +4,12 @@ include "function.php";
 include "connect.php";
 include "header.php";
 
-$_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlatest=' . $_GET["nonlatest"];?>
+if ($_GET["page"] == 0)
+{
+    $_GET["page"] = 1;
+}
+
+$_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlatest=' . $_GET["nonlatest"] . '&page=' . $_GET["page"];?>
 
     <div class="row">
         <div class="col-xs-2"></div>
@@ -12,6 +17,7 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
             <?php
             $general_query = '';
             //All colleges
+
             if ($_GET["college_id"] != 0)
             {
                 if ($_GET["nonlatest"] == 1)
@@ -22,14 +28,15 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
                                     THEN 1 
                                     ELSE (SUM(CASE WHEN lp.is_like = true THEN 1 ELSE 0 END) + SUM(CASE WHEN lp.is_like = false THEN 1 ELSE 0 END)) 
                                     END)::float) AS rating,
-                                  p.post_id, p.content, p.college_id, p.sent_date, college.name
+                                  p.post_id, p.content, p.college_id, to_char(p.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f, p.sent_date, college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
                                   LEFT OUTER JOIN like_post lp
                                   ON p.post_id = lp.post_id                                  
                                   WHERE p.college_id = :college_id  
 								  GROUP BY p.post_id, p.content, p.college_id, sent_date, college.name
-                                  ORDER BY rating DESC');
+                                  ORDER BY rating DESC
+                                  LIMIT 5 OFFSET (5 * (:offset - 1))');
                 }
                 else if ($_GET["nonlatest"] == 0)
                 {
@@ -39,17 +46,18 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
                                     THEN 1 
                                     ELSE (SUM(CASE WHEN lp.is_like = true THEN 1 ELSE 0 END) + SUM(CASE WHEN lp.is_like = false THEN 1 ELSE 0 END)) 
                                     END)::float) AS rating,
-                                  p.post_id, p.content, p.college_id, p.sent_date, college.name
+                                  p.post_id, p.content, p.college_id, to_char(p.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f, p.sent_date, college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
                                   LEFT OUTER JOIN like_post lp
                                   ON p.post_id = lp.post_id
                                   WHERE p.college_id = :college_id                                  
 								  GROUP BY p.post_id, p.content, p.college_id, sent_date, college.name
-                                  ORDER BY sent_date DESC');
+                                  ORDER BY sent_date DESC
+                                  LIMIT 5 OFFSET (5 * (:offset - 1))');
                 }
 
-                $general_query->execute(array(':college_id' => $_GET["college_id"]));
+                $general_query->execute(array(':college_id' => $_GET["college_id"], ':offset' => $_GET['page']));
             }
             else if ($_GET["college_id"] == 0)
             {
@@ -61,13 +69,14 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
                                     THEN 1 
                                     ELSE (SUM(CASE WHEN lp.is_like = true THEN 1 ELSE 0 END) + SUM(CASE WHEN lp.is_like = false THEN 1 ELSE 0 END)) 
                                     END)::float) AS rating,
-                                  p.post_id, p.content, p.college_id, p.sent_date, college.name
+                                  p.post_id, p.content, p.college_id, to_char(p.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f, p.sent_date,college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
                                   LEFT OUTER JOIN like_post lp
                                   ON p.post_id = lp.post_id
 								  GROUP BY p.post_id, p.content, p.college_id, sent_date, college.name
-                                  ORDER BY rating DESC');
+                                  ORDER BY rating DESC
+                                  LIMIT 5 OFFSET (5 * (:offset - 1))');
                 }
                 else if ($_GET["nonlatest"] == 0)
                 {
@@ -77,18 +86,19 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
                                     THEN 1 
                                     ELSE (SUM(CASE WHEN lp.is_like = true THEN 1 ELSE 0 END) + SUM(CASE WHEN lp.is_like = false THEN 1 ELSE 0 END)) 
                                     END)::float) AS rating,
-                                  p.post_id, p.content, p.college_id, p.sent_date, college.name
+                                  p.post_id, p.content, p.college_id, to_char(p.sent_date, \'Month DD, YYYY at HH12:MI PM\') AS sent_date_f, p.sent_date, college.name
                                   FROM post p JOIN
                                   college ON p.college_id = college.college_id
                                   LEFT OUTER JOIN like_post lp
                                   ON p.post_id = lp.post_id
 								  GROUP BY p.post_id, p.content, p.college_id, sent_date, college.name
-                                  ORDER BY sent_date DESC');
+                                  ORDER BY sent_date DESC
+                                  LIMIT 5 OFFSET (5 * (:offset - 1))');
 
                     $general_query->execute();
                 }
 
-                $general_query->execute();
+                $general_query->execute(array(':offset' => $_GET['page']));
             }
 
             while ($row = $general_query->fetch(PDO::FETCH_ASSOC))
@@ -113,7 +123,7 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
                 $num_comments_result = $num_comments_query->fetchColumn();
                 $rating = round($row["rating"] * 100);
                 echo '<div class="panel panel-default">
-                      <div class="panel-body"><span class="pull-right">' . $row['name']. '</span><br>' . $row['content'] .
+                      <div class="panel-body"><span class="pull-left">Published on ' . $row['sent_date_f'] .'</span><span class="pull-right">' . $row['name']. '</span><br><br>' . $row['content'] .
                      '<div class="progress top-buffer-10 fixed-width-65">';
                 if ($rating >= 50)
                 {
@@ -159,14 +169,25 @@ $_SESSION["current"] = 'index.php?college_id=' . $_GET["college_id"] . '&nonlate
         <div class="col-xs-2"></div>
     </div>
     <div class="row">
-        <div class="col-xs-3"></div>
-        <div class="col-xs-4">
-                <ul class="pagination">
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">4</a></li>
-                    <li><a href="#">5</a></li>
+        <div class="col-xs-2"></div>
+        <div class="col-xs-5 text-center">
+                <ul class="pagination center-list">
+                    <?php
+                        $pages_query = $db->prepare('SELECT post_id FROM post');
+                        $pages_query->execute();
+
+                        //5 posts per page
+                        $count_pages = $pages_query->rowCount() / 5;
+
+                        if (($pages_query->rowCount() % 5) != 0)
+                        {
+                            $count_pages++;
+                        }
+
+                        for ($x = 1; $x <= $count_pages; $x++) {
+                            echo "<li><a href=\"index.php?page=" . $x ."\">" .  $x ."</a></li>";
+                        }
+                    ?>
                 </ul>
         </div>
         <div class="col-xs-3"></div>

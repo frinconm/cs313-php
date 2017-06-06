@@ -4,6 +4,8 @@ function addOrUpdateUrlParam($name, $value)
 {
     $params = $_GET;
     unset($params[$name]);
+    unset($params["page"]);
+    $params["page"] = 1;
     $params[$name] = $value;
     return 'index.php?'.http_build_query($params);
 }
